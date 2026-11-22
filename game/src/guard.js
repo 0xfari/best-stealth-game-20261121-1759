@@ -59,6 +59,12 @@ export function createGuard(level, def, index) {
     cone: def.cone,
     pause: def.pause,
     waypoints: def.waypoints,
+    /** Archetype (guardtypes.js): 'patrol' unless the def names another kind. */
+    kind: def.kind ?? 'patrol',
+    /** Patrol speed: the Lookout stands still (0) but still chases at speed. */
+    patrolSpeed: def.patrolSpeed ?? def.speed,
+    /** Suspicion fill multiplier: the Runner gets suspicious half again as fast. */
+    detectRate: def.detectRate ?? 1,
   };
   // Face the first leg of the patrol.
   const next = def.waypoints[state.waypoint];
@@ -158,7 +164,7 @@ export function createGuard(level, def, index) {
       state.unseenFor = 0;
       // Closer is scarier; lamplight is scarier; sneaking and shadow buy time.
       const closeness = 0.55 + 0.9 * (1 - distance / state.cone);
-      let rate = 1.15 * closeness;
+      let rate = 1.15 * closeness * state.detectRate;
       if (inLight(level, player.x, player.y)) rate *= 1.6;
       else if (inDark(level, player.x, player.y)) rate *= 0.5;
       if (player.sneaking) rate *= 0.6;
@@ -197,7 +203,8 @@ export function createGuard(level, def, index) {
 
     if (noise && state.mode !== GUARD_ALERT) {
       const noiseDistance = Math.hypot(noise.x - state.x, noise.y - state.y);
-      if (noiseDistance < 115 && state.mode === GUARD_PATROL) {
+      // A thrown coin's ring carries further than a footstep (noise.radius).
+      if (noiseDistance < (noise.radius ?? 115) && state.mode === GUARD_PATROL) {
         state.mode = GUARD_SUSPICIOUS;
         state.investigate = { x: noise.x, y: noise.y };
         state.suspicion = Math.max(state.suspicion, GUARD.suspectAt);
@@ -260,7 +267,7 @@ export function createGuard(level, def, index) {
     const target = def.waypoints[state.waypoint];
     const targetX = (target[0] + 0.5) * TILE;
     const targetY = (target[1] + 0.5) * TILE;
-    if (moveToward(targetX, targetY, state.speed, dt)) {
+    if (moveToward(targetX, targetY, state.patrolSpeed, dt)) {
       state.waypoint = (state.waypoint + 1) % def.waypoints.length;
       state.pauseLeft = state.pause;
     }

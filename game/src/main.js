@@ -9,8 +9,8 @@
 
 import { BEST_KEY, STEP } from './config.js';
 import { createRandom } from './random.js';
-import { createWorld, EVENT_ALERT, EVENT_CAUGHT, EVENT_LEVEL, EVENT_OVER, EVENT_PICKUP, EVENT_WIN } from './world.js';
-import { ACTION_CONFIRM, ACTION_MUTE, ACTION_PAUSE, createInput } from './input.js';
+import { createWorld, EVENT_ALERT, EVENT_CAUGHT, EVENT_COIN, EVENT_LEVEL, EVENT_OVER, EVENT_PICKUP, EVENT_WIN } from './world.js';
+import { ACTION_CONFIRM, ACTION_MUTE, ACTION_PAUSE, ACTION_THROW, createInput } from './input.js';
 import { createRenderer, SCREEN_CAUGHT, SCREEN_LEVEL, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './render.js';
 import { createAudio } from './audio.js';
 import { stageShot } from './shots.js';
@@ -92,6 +92,9 @@ function runGame() {
       const muted = audio.setMuted(!audio.isMuted());
       announce(muted ? 'Sound off.' : 'Sound on.');
     }
+    if (actions & ACTION_THROW && screen === SCREEN_PLAY) {
+      if (world.throwCoin()) announce('Coin tossed — a guard is coming to look.');
+    }
     if (actions & ACTION_CONFIRM) {
       if (screen === SCREEN_TITLE || screen === SCREEN_OVER || screen === SCREEN_WIN) startGame();
       else if (screen === SCREEN_LEVEL || screen === SCREEN_CAUGHT) {
@@ -121,6 +124,7 @@ function runGame() {
     const events = world.step(STEP, vector, sneak, false);
     if (world.state.playerStepped) audio.step(world.state.player.state.sneaking);
     if (world.state.guardStep) audio.guardStep(world.state.guardStep.distance, world.state.guardStep.pan);
+    if (events & EVENT_COIN) audio.coin();
     if (events & EVENT_PICKUP) {
       audio.pickup();
       announce(`Took ${world.state.lastPickup}. ${world.state.artifactsTaken} of ${world.state.artifactsTotal}.`);

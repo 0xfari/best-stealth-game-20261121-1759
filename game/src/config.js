@@ -18,6 +18,8 @@ export const PLAYER = {
   noiseRadius: 115,
   /** Seconds between noise pulses while walking. */
   noiseEvery: 0.4,
+  /** How far a thrown coin flies, in pixels (distraction.js). */
+  coinThrow: 150,
 };
 
 export const GUARD = {
@@ -96,6 +98,9 @@ export const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';
 
 /** Where the best score is kept between visits (this browser only). */
 export const BEST_KEY = 'lamplight-heist.best';
+
+// The wings: three in v1, a fourth — The Cellar — in v2 (wing4.js).
+import { CELLAR_LEVEL } from './wing4.js';
 
 /**
  * Map legend (one character per tile, 32 columns x 18 rows):
@@ -197,4 +202,5 @@ export const LEVELS = [
       { waypoints: [[28, 2], [28, 14]], speed: 78, cone: 290, pause: 0.9 },
     ],
   },
+  CELLAR_LEVEL,
 ];

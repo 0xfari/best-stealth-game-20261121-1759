@@ -7,6 +7,7 @@ import { LEVELS, LIVES, SCORE } from './config.js';
 import { parseLevel } from './level.js';
 import { createPlayer } from './player.js';
 import { createGuard, GUARD_ALERT } from './guard.js';
+import { createDistraction } from './distraction.js';
 
 export const EVENT_PICKUP = 1;
 export const EVENT_ALERT = 2;
@@ -14,6 +15,8 @@ export const EVENT_CAUGHT = 4;
 export const EVENT_LEVEL = 8;
 export const EVENT_WIN = 16;
 export const EVENT_OVER = 32;
+/** A thrown coin just landed and started ringing. */
+export const EVENT_COIN = 64;
 
 const ARTIFACT_NAMES = ['the Jade Fox', 'the Moon Pearl', 'the Gilded Mask'];
 
@@ -44,6 +47,8 @@ export function createWorld(random) {
     lastPickup: '',
     /** The guard whose footstep just sounded, with its distance and pan. */
     guardStep: null,
+    /** The thief's coin set (distraction.js): one lure at a time. */
+    coins: null,
     /** True on the step the player's footstep sounded (drives the audio). */
     playerStepped: false,
     /** The wing just cleared, and whether it was cleared unseen (the level panel). */
@@ -57,6 +62,7 @@ export function createWorld(random) {
     state.level = parseLevel(LEVELS[index]);
     state.player = createPlayer(state.level);
     state.guards = state.level.def.guards.map((def, guardIndex) => createGuard(state.level, def, guardIndex));
+    state.coins = createDistraction();
     state.elapsed = 0;
     state.artifactsTaken = 0;
     state.artifactsTotal = state.level.artifacts.length;
@@ -76,6 +82,12 @@ export function createWorld(random) {
     loadLevel(0);
   }
 
+  /** Toss a coin in the direction the thief faces. False while cooling down. */
+  function throwCoin() {
+    const player = state.player.state;
+    return state.coins.throwCoin(state.level, player.x, player.y, player.facing);
+  }
+
   /**
    * One fixed step. `vector` is the player's steering vector, `sneak` is Shift.
    * With `harmless` set (the title screen's backdrop) the world moves but nothing is
@@ -86,7 +98,10 @@ export function createWorld(random) {
     const player = state.player.state;
     const madeNoise = state.player.step(dt, vector, sneak);
     state.playerStepped = madeNoise && !harmless;
-    const noise = madeNoise && !harmless ? { x: player.x, y: player.y } : null;
+    const coinStep = state.coins.step(dt);
+    if (coinStep.landed) events |= EVENT_COIN;
+    // A ringing coin is the noise the guards hear — it outranks a footstep.
+    const noise = coinStep.ring ?? (madeNoise && !harmless ? { x: player.x, y: player.y } : null);
 
     state.guardStep = null;
     for (const guard of state.guards) {
@@ -162,5 +177,5 @@ export function createWorld(random) {
   }
 
   reset();
-  return { state, reset, step, loadLevel };
+  return { state, reset, step, loadLevel, throwCoin };
 }

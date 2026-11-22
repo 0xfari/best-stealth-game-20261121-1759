@@ -7,6 +7,8 @@
 import { FIELD, FONT, LIVES, PALETTE, TILE } from './config.js';
 import { GUARD_ALERT, GUARD_SEARCH, GUARD_SUSPICIOUS } from './guard.js';
 import { TILE_COVER, TILE_DARK, TILE_LAMP, TILE_WALL, isSolid } from './level.js';
+import { drawCoins } from './distraction.js';
+import { drawLighting, drawNearMiss } from './lighting.js';
 
 export const SCREEN_TITLE = 'title';
 export const SCREEN_PLAY = 'play';
@@ -304,9 +306,10 @@ export function createRenderer(canvas) {
       context.fill();
     }
     // Contextual hint along the bottom.
-    let hint = 'WASD / arrows — move    Shift — sneak (slow, quiet, harder to spot)    P — pause    M — mute';
+    let hint = 'WASD / arrows — move    Shift — sneak (slow, quiet, harder to spot)    Q — toss a coin to lure a guard    P — pause    M — mute';
     if (world.exposure > 0.66) hint = 'SPOTTED — break line of sight, hide in shadow!';
     else if (world.exposure > 0.33) hint = 'A guard is getting suspicious — slip away.';
+    else if (world.coins && world.coins.ringing()) hint = 'The coin rang — a guard is coming to look!';
     else if (!world.exitOpen) hint = `Take every artifact (${world.artifactsTaken}/${world.artifactsTotal}), then reach the glowing exit.`;
     else hint = 'The exit is open — get out, unseen!';
     text(hint, FIELD.width / 2, FIELD.height - 30, 16, world.exposure > 0.33 ? PALETTE.warn : PALETTE.muted, 'center');
@@ -330,11 +333,12 @@ export function createRenderer(canvas) {
   }
 
   const TITLE_LINES = [
-    'A museum after closing. Three artifacts. One way out.',
+    'A museum after closing. Four wings to empty. One way out.',
     'Guards patrol with lamps and cones of sight —',
     'stay in shadow, move slow, and never let them see you twice.',
-    'WASD / arrows to move · Shift to sneak · P to pause · M to mute',
+    'WASD / arrows to move · Shift to sneak · Q to toss a coin · P to pause · M to mute',
     '',
+    'Four wings: The Foyer · The Gallery · The Vault Wing · The Cellar',
   ];
   const PAUSED_LINES = ['The guards will wait for you.'];
   const CAUGHT_LINES = ['', ''];
@@ -354,8 +358,11 @@ export function createRenderer(canvas) {
     drawArtifacts(level);
     drawCover(level);
     drawCones(world.guards);
+    drawLighting(context, level);
     drawPlayer(world.player.state);
     drawGuards(world.guards);
+    drawCoins(context, world.coins);
+    drawNearMiss(context, world.exposure);
     if (screen === SCREEN_TITLE) {
       TITLE_LINES[4] = bestLabel(best);
       drawPanel('LAMPLIGHT HEIST', TITLE_LINES, 'Press Space or click to begin');

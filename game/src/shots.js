@@ -232,9 +232,14 @@ export function stageShot(name, world) {
     }
     return { screen: cleared ? SCREEN_LEVEL : SCREEN_PLAY, best: world.state.score };
   }
-  // play: a good stretch of real play, cones and cover in frame.
+  // play: a good stretch of real play in the new wing, cones and cover in frame.
+  // The cover shows The Cellar: a coin tossed late in the stretch, so it is still
+  // ringing when the frame is taken, with a guard turning toward the ring.
+  world.loadLevel(3);
+  const throwAt = Math.floor(11.3 / STEP);
   for (let index = 0; index < PLAY_SECONDS / STEP; index += 1) {
     const move = pilot.decide(STEP);
+    if (index === throwAt) world.throwCoin();
     world.step(STEP, move.vector, move.sneak, false);
   }
   return { screen: SCREEN_PLAY, best: world.state.score };

@@ -146,6 +146,14 @@ export function createAudio() {
     tone(now + 0.1, 165, 0.7, 0.14, 'sawtooth', 0);
   }
 
+  /** A bright metallic tink when a thrown coin lands and starts ringing. */
+  function coin() {
+    if (!context) return;
+    const now = context.currentTime;
+    tone(now, 1568, 0.3, 0.1, 'triangle', 0);
+    tone(now + 0.05, 2093, 0.4, 0.07, 'sine', 0);
+  }
+
   /** A short rising figure when a level is cleared. */
   function levelClear() {
     if (!context) return;
@@ -166,5 +174,5 @@ export function createAudio() {
     });
   }
 
-  return { ensure, setMuted, isMuted, step, guardStep, alertSting, pickup, caught, levelClear, win };
+  return { ensure, setMuted, isMuted, step, guardStep, alertSting, pickup, caught, coin, levelClear, win };
 }

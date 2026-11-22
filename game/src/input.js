@@ -5,6 +5,8 @@
 export const ACTION_CONFIRM = 1;
 export const ACTION_PAUSE = 2;
 export const ACTION_MUTE = 4;
+/** Toss a coin (Q or C) to lure a guard away. */
+export const ACTION_THROW = 8;
 
 const LEFT = new Set(['ArrowLeft', 'KeyA']);
 const RIGHT = new Set(['ArrowRight', 'KeyD']);
@@ -14,6 +16,7 @@ const SNEAK = new Set(['ShiftLeft', 'ShiftRight']);
 const CONFIRM = new Set(['Space', 'Enter']);
 const PAUSE = new Set(['KeyP', 'Escape']);
 const MUTE = new Set(['KeyM']);
+const THROW = new Set(['KeyQ', 'KeyC']);
 
 export function createInput(target) {
   const held = { left: false, right: false, up: false, down: false, sneak: false };
@@ -31,6 +34,8 @@ export function createInput(target) {
       if (!event.repeat) actions |= ACTION_PAUSE;
     } else if (MUTE.has(event.code)) {
       if (!event.repeat) actions |= ACTION_MUTE;
+    } else if (THROW.has(event.code)) {
+      if (!event.repeat) actions |= ACTION_THROW;
     } else return;
     event.preventDefault();
   });
